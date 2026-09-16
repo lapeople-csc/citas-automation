@@ -34,7 +34,7 @@ async function getFromDomus(inmobiliaria, apiType, endpoint, params, extraHeader
             return null;
     }
 
-     if (!apiKey || !baseUrl) {
+    if (!apiKey || !baseUrl) {
         console.error(`Error: Credenciales no encontradas para la inmobiliaria '${inmobiliaria}' y tipo de API '${apiType}'.`);
         return null;
     }
@@ -55,12 +55,12 @@ async function getFromDomus(inmobiliaria, apiType, endpoint, params, extraHeader
     } catch (error) {
         console.error(`❌ Error GET Domus (${inmobiliaria}): ${error.message}`);
         if (error.response) {
-        console.error("Detalle del error:", error.response.data);
+            console.error("Detalle del error:", error.response.data);
         }
         return null;
-            
+
     }
-    
+
 }
 
 async function postToDomus(inmobiliaria, endpoint, data) {
@@ -91,27 +91,27 @@ async function postToDomus(inmobiliaria, endpoint, data) {
     }
 }
 
-async function getMeetingsForDay(inmobiliaria, date) {
-  const today = moment(date).format('YYYY-MM-DD');
-  const params = { startDate: today, endDate: today };
+async function getMeetingsForDay(inmobiliaria, date, appointmentTypeIds = null) {
+    const today = moment(date).format('YYYY-MM-DD');
+    const params = { startDate: today, endDate: today };
 
-  const typeIds = getAppointmentTypeIds(inmobiliaria);
-  if (typeIds.length > 0) {
-    params.type = typeIds.join(',');
-  }
+    const typeIds = appointmentTypeIds ?? getAppointmentTypeIds(inmobiliaria);
+    if (typeIds.length > 0) {
+        params.type = typeIds.join(',');
+    }
 
-  const appointments = await getFromDomus(inmobiliaria, 'citas', 'api/public/appointments', params);
+    const appointments = await getFromDomus(inmobiliaria, 'citas', 'api/public/appointments', params);
 
-  if (!Array.isArray(appointments)) {
-    console.error("Error: La respuesta de la API no es un array válido de citas.");
-    return [];
-  }
-  const validMeetings = appointments.filter(
-    (appointment) =>
-      appointment.status?.name !== "Cancelada" &&
-      appointment.status?.name !== "Reprogramada"
-  );
-  return validMeetings;
+    if (!Array.isArray(appointments)) {
+        console.error("Error: La respuesta de la API no es un array válido de citas.");
+        return [];
+    }
+    const validMeetings = appointments.filter(
+        (appointment) =>
+            appointment.status?.name !== "Cancelada" &&
+            appointment.status?.name !== "Reprogramada"
+    );
+    return validMeetings;
 }
 
 async function getConcludedMeetings(inmobiliaria, date) {
@@ -125,7 +125,7 @@ async function getConcludedMeetings(inmobiliaria, date) {
     if (typeIds.length > 0) {
         params.type = typeIds.join(',');
     }
-    
+
     const appointments = await getFromDomus(inmobiliaria, 'citas', 'api/public/appointments', params);
 
     if (!Array.isArray(appointments)) {
@@ -137,7 +137,7 @@ async function getConcludedMeetings(inmobiliaria, date) {
     console.log(`Hora actual de la prueba: ${now.format('YYYY-MM-DD HH:mm:ss')}`);
 
     const startOfRange = now.clone().startOf("hour");
-    const previousHour = now.clone().subtract(1, "hour").startOf("hour");    
+    const previousHour = now.clone().subtract(1, "hour").startOf("hour");
 
     const concludedMeetings = appointments.filter(appointment => {
         const appointmentEnd = moment.tz(
@@ -145,12 +145,12 @@ async function getConcludedMeetings(inmobiliaria, date) {
             "YYYY-MM-DD HH:mm:ss",
             "America/Bogota"
         );
-        
+
         return (
-          appointmentEnd.isAfter(previousHour) && // terminó después de la hora anterior
-          appointmentEnd.isSameOrBefore(now) && // y antes o igual a la hora actual
-          appointment.status?.name !== "Cancelada" && // excluir canceladas
-          appointment.status?.name !== "Reprogramada" // excluir reprogramadas
+            appointmentEnd.isAfter(previousHour) && // terminó después de la hora anterior
+            appointmentEnd.isSameOrBefore(now) && // y antes o igual a la hora actual
+            appointment.status?.name !== "Cancelada" && // excluir canceladas
+            appointment.status?.name !== "Reprogramada" // excluir reprogramadas
         );
     });
 
@@ -161,7 +161,7 @@ async function getWeeklyMeetings(inmobiliaria) {
     const today = moment().tz("America/Bogota");
     const startOfWeek = today.clone().isoWeekday(1).format('YYYY-MM-DD');
     const endOfWeek = today.clone().isoWeekday(6).format('YYYY-MM-DD');
-    
+
     const params = {
         startDate: startOfWeek,
         endDate: endOfWeek
@@ -173,12 +173,12 @@ async function getWeeklyMeetings(inmobiliaria) {
     }
 
     return getFromDomus(inmobiliaria, 'citas', 'api/public/appointments', params);
-    
+
 }
 
 async function getOwnerDetails(inmobiliaria, propertyCode) {
     try {
-    
+
         const listResponse = await getFromDomus(inmobiliaria, 'owners', 'owners', { codpro: propertyCode });
 
         if (!listResponse || !listResponse.data || listResponse.data.length === 0) {
@@ -215,21 +215,21 @@ async function getOwnerDetails(inmobiliaria, propertyCode) {
         console.error(`Error en el flujo de obtención de datos del propietario para ${propertyCode}: ${error.message}`);
         return null;
     }
-   
+
 }
 
 async function getOwnerLink(inmobiliaria, property_idpro, startDate, endDate) {
     try {
         const baseUrl = process.env.DOMUS_CRM_BASE_URL;
         const apiKey = process.env[`DOMUS_API_KEY_CRM_${inmobiliaria.toUpperCase()}`];
-        
+
         if (!apiKey || !baseUrl) {
             console.error(`Error: No se encontró la API Key o la URL de reportes para ${inmobiliaria}.`);
             return null;
         }
 
         const url = `${baseUrl}/api/public/owner/link`;
-        
+
         const headers = {
             'Authorization': apiKey,
             'Content-Type': 'application/json'
@@ -242,11 +242,11 @@ async function getOwnerLink(inmobiliaria, property_idpro, startDate, endDate) {
             start_date: startDate,
             end_date: endDate
         };
-        
+
         //console.log(`📤 POST ${url} para ${inmobiliaria} con body:`, body);
 
         const response = await axios.post(url, body, { headers });
-        
+
         return response;
 
     } catch (error) {
@@ -266,10 +266,10 @@ async function getProperties(inmobiliaria) {
     let allProperties = [];
     let currentPage = 1;
     let lastPage = null;
-    
+
     const extraHeaders = {
         'Perpage': 50,
-        'Inmobiliaria': 1 
+        'Inmobiliaria': 1
     };
 
     try {
@@ -277,24 +277,24 @@ async function getProperties(inmobiliaria) {
             console.log(`Buscando inmuebles para ${inmobiliaria} - Página ${currentPage}...`);
 
             const response = await getFromDomus(
-                inmobiliaria, 
-                'owners', 
-                'properties', 
+                inmobiliaria,
+                'owners',
+                'properties',
                 { page: currentPage },
                 extraHeaders
             );
 
             if (!response || !response.data || response.data.length === 0) {
                 console.log(`Página ${currentPage} sin resultados o final de resultados alcanzado. Deteniendo paginación.`);
-                break; 
+                break;
             }
-            if (lastPage === null) { 
-                lastPage = response.last_page || currentPage; 
+            if (lastPage === null) {
+                lastPage = response.last_page || currentPage;
                 console.log(`Total de páginas a procesar (Límite): ${lastPage}.`);
             }
 
             allProperties = allProperties.concat(response.data);
-            
+
             currentPage++;
 
         } while (currentPage <= lastPage);
@@ -330,12 +330,12 @@ async function getMeetingDetail(inmobiliaria, meetingId) {
     }
 }
 function getAppointmentTypeIds(inmobiliaria) {
-  const envVar = process.env[`APPOINTMENT_TYPE_IDS_${inmobiliaria.toUpperCase()}`];
-  if (!envVar) {
-    console.warn(`Advertencia: No se encontraron IDs para la inmobiliaria '${inmobiliaria}'.`);
-    return [];
-  }
-  return envVar.split(',').map(id => parseInt(id.trim(), 10));
+    const envVar = process.env[`APPOINTMENT_TYPE_IDS_${inmobiliaria.toUpperCase()}`];
+    if (!envVar) {
+        console.warn(`Advertencia: No se encontraron IDs para la inmobiliaria '${inmobiliaria}'.`);
+        return [];
+    }
+    return envVar.split(',').map(id => parseInt(id.trim(), 10));
 }
 
 module.exports = {
