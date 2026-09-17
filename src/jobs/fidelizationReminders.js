@@ -33,7 +33,7 @@ function getReminderSearchWindow(now = moment().tz(TIMEZONE)) {
 function getAppointmentTypeIds(inmobiliaria) {
     const value = process.env[`APPOINTMENT_TYPE_IDS_FIDELIZATION_${inmobiliaria.toUpperCase()}`];
     if (!value) {
-        console.warn(`No se encontraron IDs de tipos para reminder-wise en ${inmobiliaria}.`);
+        console.warn(`No se encontraron IDs de tipos para recordatorio de fidelizacion en ${inmobiliaria}.`);
         return [];
     }
 
@@ -52,7 +52,7 @@ function getReminderConfig(inmobiliaria) {
 }
 
 async function sendDailyReminders() {
-    console.log('Iniciando tarea reminder-wise de recordatorio de citas');
+    console.log('Iniciando tarea recordatorio de fidelizacion de recordatorio de citas');
     const searchWindow = getReminderSearchWindow();
 
     for (const inmobiliaria of INMOBILIARIAS) {
@@ -61,12 +61,12 @@ async function sendDailyReminders() {
         const appointmentTypeIds = getAppointmentTypeIds(inmobiliaria);
 
         if (![config.templateId, config.groupId, config.userId].every(Number.isInteger)) {
-            console.error(`Configuración reminder-wise incompleta para ${inmobiliaria}.`);
+            console.error(`Configuración recordatorio de fidelizacion incompleta para ${inmobiliaria}.`);
             continue;
         }
 
         if (appointmentTypeIds.length === 0) {
-            console.error(`No hay tipos de cita exclusivos configurados para reminder-wise en ${inmobiliaria}.`);
+            console.error(`No hay tipos de cita exclusivos configurados para recordatorio de fidelizacion en ${inmobiliaria}.`);
             continue;
         }
 
@@ -83,7 +83,7 @@ async function sendDailyReminders() {
                 meeting.init_time <= searchWindow.endTime
             ));
 
-            console.log(`Citas reminder-wise seleccionadas: ${filteredMeetings.length}.`);
+            console.log(`Citas recordatorio de fidelizacion seleccionadas: ${filteredMeetings.length}.`);
 
             for (const meeting of filteredMeetings) {
                 try {
@@ -108,11 +108,11 @@ async function sendDailyReminders() {
                 }
             }
         } catch (error) {
-            console.error(`Error obteniendo citas reminder-wise para ${inmobiliaria}: ${error.message}`);
+            console.error(`Error obteniendo citas recordatorio de fidelizacion para ${inmobiliaria}: ${error.message}`);
         }
     }
 
-    console.log('Tarea reminder-wise finalizada');
+    console.log('Tarea recordatorio de fidelizacion finalizada');
 }
 
 async function sendReminderCase(detail, groupId, templateId, inmobiliaria, userId, textDay) {
@@ -181,7 +181,7 @@ async function sendReminderCase(detail, groupId, templateId, inmobiliaria, userI
         const caseId = response?.case_id;
 
         if (caseId) {
-            console.log(`Recordatorio reminder-wise enviado para cita ${detail.id}.`);
+            console.log(`Recordatorio recordatorio de fidelizacion enviado para cita ${detail.id}.`);
             await wiseApi.updateCaseStatus(caseId, 'solved');
             return;
         }
@@ -193,15 +193,15 @@ async function sendReminderCase(detail, groupId, templateId, inmobiliaria, userI
             const retryCaseId = retryResponse?.case_id;
 
             if (retryCaseId) {
-                console.log(`Recordatorio reminder-wise reenviado para cita ${detail.id}.`);
+                console.log(`Recordatorio recordatorio de fidelizacion reenviado para cita ${detail.id}.`);
                 await wiseApi.updateCaseStatus(retryCaseId, 'solved');
             }
             return;
         }
 
-        console.error(`Fallo envío reminder-wise para cita ${detail.id}:`, response);
+        console.error(`Fallo envío recordatorio de fidelizacion para cita ${detail.id}:`, response);
     } catch (error) {
-        console.error(`Error creando caso reminder-wise para cita ${detail.id}: ${error.message}`);
+        console.error(`Error creando caso recordatorio de fidelizacion para cita ${detail.id}: ${error.message}`);
     }
 }
 
@@ -226,7 +226,7 @@ function getAdvisorName(detail) {
 
 if (require.main === module) {
     sendDailyReminders().catch((error) => {
-        console.error(`Error en reminder-wise: ${error.message}`);
+        console.error(`Error en recordatorio de fidelizacion: ${error.message}`);
         process.exitCode = 1;
     });
 }
