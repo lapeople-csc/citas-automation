@@ -7,7 +7,7 @@ const WISE_API_URL = process.env.WISE_API_URL || "https://api.wcx.cloud/core/v1"
 /**
  * Formatea un número de teléfono agregando el indicativo 57.
  * @param {string} phoneNumber
- * @returns {string} 
+ * @returns {string}
  */
 function formatPhoneNumber(phoneNumber) {
     if (!phoneNumber) {
@@ -31,7 +31,7 @@ async function authenticateAndGetToken() {
     if (!wiseApiKeyAuth || !wiseUser) {
         console.error("Error de autenticacion WISE")
         return null;
-        
+
     }
 
     try {
@@ -45,15 +45,15 @@ async function authenticateAndGetToken() {
         const response = await axios.get(url, { headers });
         console.log("Autenticacion existosa");
         return response.data.token;
-        
+
     } catch (error) {
         console.error(`Error al autenticar en WISE: ${error.message}`);
         if (error.response) {
             console.error("Detalle del error:", error.response.data);
         }
-        return null;     
+        return null;
     }
-    
+
 }
 
 /**
@@ -81,21 +81,21 @@ async function createCaseAndSend(payload, contactId) {
     }
 
     try {
-        const response = await axios.post(url, newPayload, { headers }); 
+        const response = await axios.post(url, newPayload, { headers });
         console.log(`Exito. Wise CX Caso creado`);
         return response.data;
-        
+
     } catch (error) {
         console.error(`Error al crear el caso: ${error.message}`);
-        if (error.response){
+        if (error.response) {
             console.error("Detalle del error:", error.response.data);
-            return error.response.data;  
-            
+            return error.response.data;
+
         }
-        return { error: error.message, opened_cases: [] }; 
-        
+        return { error: error.message, opened_cases: [] };
+
     }
-    
+
 
 }
 
@@ -129,7 +129,7 @@ async function getContactIdByPhone(phoneNumber) {
                 'fields': 'id,email,personal_id,phone,name'
             }
         });
-        
+
         if (response.data && response.data.data && response.data.data.length > 0) {
             return response.data.data[0].id;
         }
@@ -138,6 +138,11 @@ async function getContactIdByPhone(phoneNumber) {
         console.error(`Error al obtener el ID de contacto por teléfono (${phoneNumber}):`, error.response ? error.response.data : error.message);
         return null;
     }
+}
+
+async function getContactByPhone(phoneNumber) {
+    const contactId = await getContactIdByPhone(phoneNumber);
+    return contactId ? { id: contactId } : null;
 }
 
 /**
@@ -170,7 +175,7 @@ async function getContactIdByEmail(email) {
                 'fields': 'id,email,personal_id,phone,name'
             }
         });
-        
+
         if (response.data && response.data.data && response.data.data.length > 0) {
             return response.data.data[0].id;
         }
@@ -269,6 +274,7 @@ module.exports = {
     authenticateAndGetToken,
     createCaseAndSend,
     getContactIdByPhone,
+    getContactByPhone,
     getContactIdByEmail,
     getOpenCaseIdByContactId,
     updateCaseStatus
